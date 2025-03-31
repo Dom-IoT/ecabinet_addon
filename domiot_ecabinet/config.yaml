@@ -1,6 +1,6 @@
-name: eCabinet-addon
-version: "1.0.0"
-slug: ecabinet_addon
+name: "eCabinet"
+version: "0.0.1"
+slug: domiot_ecabinet
 description: Un serveur REST pour la gestion des items du placard connecté
 init: false
 arch:
