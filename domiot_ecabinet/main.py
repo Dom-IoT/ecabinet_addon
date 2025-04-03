@@ -51,21 +51,19 @@ def get_items():
     cur.execute('SELECT * FROM items')
     result = []
     items = cur.fetchall()
-    
     for item in items:
-        result.append({'item_name': item[0], 'cabinet_id': item[1], 'absent': item[2]})
+        result.append({'item_id': item[0], 'item_name': item[1], 'cabinet_id': item[2], 'absent': item[3]})
     return result
 
 @app.get('/items/{cabinet_id}/{item_name}')
 def get_item(item_name: str, cabinet_id: int):
     cur.execute('SELECT * FROM items WHERE item_name = ? AND cabinet_id = ?', (item_name,cabinet_id))
-    
     item = cur.fetchone()
     print("Requested item: ", item)
     if item is None:
         return {'error': 'DOES_NOT_EXIST'}
     else:
-        return {'item_name': item[0], 'cabinet_id': item[1], 'absent': item[2]}    
+        return {'item_id': item[0], 'item_name': item[1], 'cabinet_id': item[2], 'absent': item[3]}    
 
 @app.put('/items/{cabinet_id}/remove')
 def return_item(cabinet_id: int, item: Item):
