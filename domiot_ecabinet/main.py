@@ -2,8 +2,7 @@ import sqlite3
 import fastapi
 import os
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import HTTPException, status, Response
 
 class Item(BaseModel):
     item_id: str
@@ -32,18 +31,6 @@ con = sqlite3.connect('db.sqlite', check_same_thread=False)
 cur = con.cursor()
 
 app = fastapi.FastAPI()
-origins = [
-    "http://homeassistant.local:8123",  # Remplacez par l'URL de votre Home Assistant
-    "http://localhost:8123", # a rajouter en cas de dev local.
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 @app.get("/items/")
@@ -61,33 +48,56 @@ def get_item(item_name: str, cabinet_id: int):
     item = cur.fetchone()
     print("Requested item: ", item)
     if item is None:
-        return {'error': 'DOES_NOT_EXIST'}
+        raise HTTPException(status_code=404, detail="Item not found")
     else:
         return {'item_id': item[0], 'item_name': item[1], 'cabinet_id': item[2], 'absent': item[3]}    
 
 @app.put('/items/{cabinet_id}/remove')
 def return_item(cabinet_id: int, item: Item):
-    cur.execute('UPDATE items SET absent = 1 WHERE item_nid = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
+    cur.execute('SELECT * FROM items WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
+    existing_item = cur.fetchone()
+    if existing_item is None:
+        raise HTTPException(status_code=404, detail=f"Item not found in cabinet : {cabinet_id}")
+    
+    cur.execute('UPDATE items SET absent = 1 WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
     con.commit()
     return {'item_name': item.item_id, 'absent': 1}
 
 
 @app.put('/items/{cabinet_id}/add')
 def return_item(cabinet_id: int, item: Item):
+    cur.execute('SELECT * FROM items WHERE item_id = ?', (item.item_id,))
+    existing_item = cur.fetchone()
+    if existing_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    elif existing_item[2] != cabinet_id:
+        return Response(content=str({'item_id': item.item_id, 'item_name': item.item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     cur.execute('UPDATE items SET absent = 0 WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
     con.commit()
-    return {'item_name': item.item_id, 'absent': 0}
+    return {'item_id': item.item_id, 'absent': 0}
 
 #REST-Routes for vocal commands
 @app.put('/items/{cabinet_id}/{item_name}/remove')
 def take_item(item_name: str, cabinet_id: int):
+    cur.execute('SELECT * FROM items WHERE item_name = ? AND cabinet_id = ?', (item_name, cabinet_id))
+    existing_item = cur.fetchone()
+    if existing_item is None:
+        raise HTTPException(status_code=404, detail=f"Item not found in cabinet : {cabinet_id}")
+    
     cur.execute('UPDATE items SET absent = 1 WHERE item_name = ? AND cabinet_id = ?', (item_name,cabinet_id))
     con.commit()
     return {'item_name': item_name, 'absent': 1}
 
 @app.put('/items/{cabinet_id}/{item_name}/add')
 def return_item(item_name: str, cabinet_id: int):
-    cur.execute('UPDATE items SET absent = 0 WHERE item_name = ? AND cabinet_id = ?', (item_name,cabinet_id))
+    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name,))
+    existing_item = cur.fetchone()
+    if existing_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    elif existing_item[2] != cabinet_id:
+        return Response(content=str({'item_name': item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
+    
+    cur.execute('UPDATE items SET absent = 0 WHERE item_name = ? AND cabinet_id = ?', (item_name, cabinet_id))
     con.commit()
     return {'item_name': item_name, 'absent': 0}
 

@@ -15,18 +15,24 @@ def callback(client, userdata, msg):
     if match:
         cabinet_id = match.group(1)
         action = match.group(2)
-        item_id = msg.payloard.decode()
+        item_id = msg.payload.decode()
         # Construire l'URL de la requête backend
         backend_url = f"http://0.0.0.0:8080/items/{cabinet_id}/{action}"
 
         # Envoyer la requête au backend (à adapter selon votre backend)
         try:
-            response = requests.put(backend_url, data={'item_id': item_id})  # Remplacer data={} par les données nécessaires
-            response.raise_for_status()  # Lever une exception en cas d'erreur HTTP
-            data = response.json()
-            if (data["absent"] == 0):
-                client.publish(f"cabinet/{cabinet_id}/status",'OK')
-            print(f"Requête envoyée avec succès à {backend_url}")
+            response = requests.put(backend_url, data={'item_id': item_id})  # Remplacer data={} par les données nécessaires            
+            if response.status_code == 200:
+                if(action == 'add'):
+                    client.publish(f"cabinet/{cabinet_id}/status", 'OK')
+
+            elif response.status_code == 201:
+                data = response.json()
+                client.publish(f"cabinet/{data.get('current_cabinet')}/status", 'NOK')
+                client.publish(f"cabinet/{data.get('good_cabinet')}/status", 'SIGNAL')
+            else:
+                print(f"Erreur lors de l'envoi de la requête à {backend_url} : Status Code {response.status_code}")
+
         except requests.exceptions.RequestException as e:
             print(f"Erreur lors de l'envoi de la requête : {e}")
     else:
