@@ -1,5 +1,7 @@
 # DomIoT - eCabinet
 eCabinet is a smart cabinet system that allows you to control and monitor your cabinet's contents remotely.
+### Requirements
+You need to have the Mosquitto broker add-on and the MQTT integration install on your system. This will create the mqtt broker which will be used by the cabinets to communicate with HomeAssistant.
 ### UserInterface
 To add user interface for adding new items in the cabinet and showing the number of items copy these lines into configuration.yaml : 
 ```yaml
