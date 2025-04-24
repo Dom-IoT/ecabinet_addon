@@ -2,7 +2,7 @@ import os
 import paho.mqtt.client as mqtt
 import re
 import requests
-
+import json
 
 MQTT_HOST = os.environ.get("MQTT_HOST")
 MQTT_USER = os.environ.get("MQTT_USER")
@@ -21,11 +21,14 @@ def callback(client, userdata, msg):
 
         # Envoyer la requête au backend (à adapter selon votre backend)
         try:
-            response = requests.put(backend_url, data={'item_id': item_id})  # Remplacer data={} par les données nécessaires            
+            item_data = {
+                "item_id": str(item_id),
+                "cabinet_id": cabinet_id,  # Assurez-vous que cette valeur correspond à celle dans l'URL
+            }
+            response = requests.put(backend_url, json=item_data)
             if response.status_code == 200:
                 if(action == 'add'):
                     client.publish(f"cabinet/{cabinet_id}/status", 'OK')
-
             elif response.status_code == 201:
                 data = response.json()
                 client.publish(f"cabinet/{data.get('current_cabinet')}/status", 'NOK')
