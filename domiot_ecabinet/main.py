@@ -6,6 +6,10 @@ from fastapi import HTTPException, status, Response
 
 class Item(BaseModel):
     item_id: str
+    cabinet_id: int
+
+class PostItem(BaseModel):
+    item_id: str
     item_name: str
     cabinet_id: int
     absent: int
@@ -71,7 +75,7 @@ def return_item(cabinet_id: int, item: Item):
     if existing_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     elif existing_item[2] != cabinet_id:
-        return Response(content=str({'item_id': item.item_id, 'item_name': item.item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
+        return Response(content=str({'item_id': item.item_id, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     cur.execute('UPDATE items SET absent = 0 WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
     con.commit()
     return {'item_id': item.item_id, 'absent': 0}
@@ -90,7 +94,7 @@ def take_item(item_name: str, cabinet_id: int):
 
 @app.put('/items/{cabinet_id}/{item_name}/add')
 def return_item(item_name: str, cabinet_id: int):
-    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name,))
+    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name))
     existing_item = cur.fetchone()
     if existing_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -110,7 +114,7 @@ def move_item(item_name: str, cabinet_id: int, new_cabinet_id: int):
     return {'item_name': item_name, 'cabinet_id': new_cabinet_id}
 
 @app.post('/items/')
-def create_item(item: Item):
+def create_item(item: PostItem):
     cur.execute('INSERT INTO items (item_id, item_name, cabinet_id, absent) VALUES (?, ?, ?, ?)', (item.item_id, item.item_name, item.cabinet_id, item.absent))
     con.commit()
     return {'item_id': item.item_id,'item_name': item.item_name, 'cabinet_id': item.cabinet_id, 'absent': item.absent}
