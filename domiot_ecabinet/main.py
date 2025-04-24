@@ -48,7 +48,7 @@ def get_items():
 
 @app.get('/items/{cabinet_id}/{item_name}')
 def get_item(item_name: str, cabinet_id: int):
-    cur.execute('SELECT * FROM items WHERE item_name = ? AND cabinet_id = ?', (item_name,cabinet_id))
+    cur.execute('SELECT * FROM items WHERE item_name = ? AND cabinet_id = ?', (item_name, cabinet_id))
     item = cur.fetchone()
     print("Requested item: ", item)
     if item is None:
@@ -56,6 +56,16 @@ def get_item(item_name: str, cabinet_id: int):
     else:
         return {'item_id': item[0], 'item_name': item[1], 'cabinet_id': item[2], 'absent': item[3]}    
 
+@app.get('/items/{item_name}')
+def get_item(item_name: str):
+    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name,))
+    item = cur.fetchone()
+    print("Requested item: ", item)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    else:
+        return {'item_id': item[0], 'item_name': item[1], 'cabinet_id': item[2], 'absent': item[3]}  
+    
 @app.put('/items/{cabinet_id}/remove')
 def return_item(cabinet_id: int, item: Item):
     cur.execute('SELECT * FROM items WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
