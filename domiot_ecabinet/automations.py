@@ -30,8 +30,9 @@ def callback(client, userdata, msg):
                 if(action == 'add'):
                     client.publish(f"cabinet/{cabinet_id}/status", 'OK')
             elif response.status_code == 201:
-                data = response.json()
                 client.publish(f"cabinet/{cabinet_id}/status", 'NOK')
+                data = response.json()
+
                 client.publish(f"cabinet/{data.get('good_cabinet')}/status", 'SIGNAL')
             else:
                 print(f"Erreur lors de l'envoi de la requête à {backend_url} : Status Code {response.status_code}")
