@@ -32,8 +32,7 @@ def callback(client, userdata, msg):
             elif response.status_code == 201:
                 client.publish(f"cabinet/{cabinet_id}/status", 'NOK')
                 data = response.json()
-
-                client.publish(f"cabinet/{data.get('good_cabinet')}/status", 'SIGNAL')
+                client.publish(f"cabinet/{data['good_cabinet']}/status", 'SIGNAL')
             else:
                 print(f"Erreur lors de l'envoi de la requête à {backend_url} : Status Code {response.status_code}")
 
