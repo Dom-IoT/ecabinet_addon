@@ -94,7 +94,7 @@ def take_item(item_name: str, cabinet_id: int):
 
 @app.put('/items/{cabinet_id}/{item_name}/add')
 def return_item(item_name: str, cabinet_id: int):
-    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name))
+    cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name,))
     existing_item = cur.fetchone()
     if existing_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
