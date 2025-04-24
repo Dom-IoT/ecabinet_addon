@@ -1,6 +1,7 @@
 import sqlite3
 import fastapi
 import os
+import json
 from pydantic import BaseModel
 from fastapi import HTTPException, status, Response
 
@@ -85,7 +86,7 @@ def return_item(cabinet_id: int, item: Item):
     if existing_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     elif existing_item[2] != cabinet_id:
-        return Response(content={'item_id': item.item_id, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}, media_type="application/json", status_code=status.HTTP_201_CREATED)
+        return Response(content=json.dumps({'item_id': item.item_id, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     cur.execute('UPDATE items SET absent = 0 WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
     con.commit()
     return {'item_id': item.item_id, 'absent': 0}
@@ -109,7 +110,7 @@ def return_item(item_name: str, cabinet_id: int):
     if existing_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     elif existing_item[2] != cabinet_id:
-        return Response(content=str({'item_name': item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
+        return Response(content=json.dumps({'item_name': item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     
     cur.execute('UPDATE items SET absent = 0 WHERE item_name = ? AND cabinet_id = ?', (item_name, cabinet_id))
     con.commit()
