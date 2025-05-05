@@ -84,7 +84,7 @@ def return_item(cabinet_id: int, item: Item):
     cur.execute('SELECT * FROM items WHERE item_id = ?', (item.item_id,))
     existing_item = cur.fetchone()
     if existing_item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=403, detail="Item not found")
     elif existing_item[2] != cabinet_id:
         return Response(content=json.dumps({'item_id': item.item_id, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     cur.execute('UPDATE items SET absent = 0 WHERE item_id = ? AND cabinet_id = ?', (item.item_id, cabinet_id))
@@ -108,7 +108,7 @@ def return_item(item_name: str, cabinet_id: int):
     cur.execute('SELECT * FROM items WHERE item_name = ?', (item_name,))
     existing_item = cur.fetchone()
     if existing_item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=403, detail="Item not found")
     elif existing_item[2] != cabinet_id:
         return Response(content=json.dumps({'item_name': item_name, 'current_cabinet': cabinet_id, 'good_cabinet': existing_item[2]}), media_type="application/json", status_code=status.HTTP_201_CREATED)
     
