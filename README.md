@@ -42,21 +42,21 @@ then in the configuration editor of your dashboard add :
 views:
   - name: Example
     cards:
-      - type: entities
-        entities:
-          - type: button
-            tap_action:
-              action: call-service
-              service: rest_command.ecabinet_post_item
-            name: Ajouter un élément au placard connecté
-          - input_text.item_id
-          - input_text.item_name
-          - input_text.cabinet_id
-      - graph: none
-        type: sensor
-        entity: sensor.item_list
-        detail: 1
-        name: Nombre d'items dans les placards
-    title: Aidant
-
+      - type: vertical-stack
+        cards:
+          - type: entities
+            entities:
+              - type: button
+                tap_action:
+                  action: call-service
+                  service: rest_command.ecabinet_post_item
+                name: Ajouter un élément au placard connecté
+              - input_text.item_id
+              - input_text.item_name
+              - input_text.cabinet_id
+          - type: sensor
+            entity: sensor.item_list
+            detail: 1
+            name: Nombre d'items dans les placards
+            title: Aidant
 ```
